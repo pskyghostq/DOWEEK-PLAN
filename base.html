@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>일주일 체크리스트</title>
+  <link rel="stylesheet" href="base_style.css">
+</head>
+<body>
+  <div class="container">
+    <h1 class="title">DOWEEK-PLAN</h1>
+
+    <!-- 입력 영역 -->
+    <div class="input-section">
+      <label for="dateInput">날짜:</label>
+      <input type="date" id="dateInput">
+      <input type="text" id="todoInput" placeholder="할 일을 입력하세요">
+      <button id="addBtn">추가</button>
+    </div>
+
+    <!-- 요일별 할 일 -->
+    <div class="week">
+      <div class="day" data-day="월">
+        <h2>월요일</h2>
+        <ul class="todo-list"></ul>
+      </div>
+      <div class="day" data-day="화">
+        <h2>화요일</h2>
+        <ul class="todo-list"></ul>
+      </div>
+      <div class="day" data-day="수">
+        <h2>수요일</h2>
+        <ul class="todo-list"></ul>
+      </div>
+      <div class="day" data-day="목">
+        <h2>목요일</h2>
+        <ul class="todo-list"></ul>
+      </div>
+      <div class="day" data-day="금">
+        <h2>금요일</h2>
+        <ul class="todo-list"></ul>
+      </div>
+      <div class="day" data-day="토">
+        <h2>토요일</h2>
+        <ul class="todo-list"></ul>
+      </div>
+      <div class="day" data-day="일">
+        <h2>일요일</h2>
+        <ul class="todo-list"></ul>
+      </div>
+    </div>
+
+    <!-- 전체 계획 요약 or 기타 할 일 표시용 -->
+    <div class="week-sheet">
+      <ul id="DoWeek-plan"></ul>
+    </div>
+
+    <!-- 칭찬 메시지 -->
+    <p id="praise-message" style="display: none;">오늘 하루도 수고했어요</p>
+    <div id="praiseBox" class="praise-box"></div>
+  </div>
+
+  <!-- JS 파일 -->
+  <script src="do.js"></script>
+</body>
+</html>
