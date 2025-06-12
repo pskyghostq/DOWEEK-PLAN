@@ -17,49 +17,10 @@
       <button id="addBtn">추가</button>
     </div>
 
-    <!-- 요일별 할 일 목록 -->
-    <div class="week">
-      <!-- 요일 반복 구조 -->
-      <div class="day" data-day="월">
-        <h2>월요일</h2>
-        <ul class="todo-list"></ul>
-        <div class="praiseBox"></div> <!-- 칭찬 메시지 박스 추가 -->
-      </div>
-      <div class="day" data-day="화">
-        <h2>화요일</h2>
-        <ul class="todo-list"></ul>
-        <div class="praiseBox"></div>
-      </div>
-      <div class="day" data-day="수">
-        <h2>수요일</h2>
-        <ul class="todo-list"></ul>
-        <div class="praiseBox"></div>
-      </div>
-      <div class="day" data-day="목">
-        <h2>목요일</h2>
-        <ul class="todo-list"></ul>
-        <div class="praiseBox"></div>
-      </div>
-      <div class="day" data-day="금">
-        <h2>금요일</h2>
-        <ul class="todo-list"></ul>
-        <div class="praiseBox"></div>
-      </div>
-      <div class="day" data-day="토">
-        <h2>토요일</h2>
-        <ul class="todo-list"></ul>
-        <div class="praiseBox"></div>
-      </div>
-      <div class="day" data-day="일">
-        <h2>일요일</h2>
-        <ul class="todo-list"></ul>
-        <div class="praiseBox"></div>
-      </div>
-    </div>
-
-    <!-- 추가 영역 (예: 전체 요약 등) -->
-    <div class="week-sheet">
-      <ul id="DoWeek-plan"></ul>
+    <!-- 주차별 계획 -->
+    <div id="week-container" style="margin-top: 30px; border-top: 2px solid #333; padding-top: 20px;">
+      <h2>주차별 계획</h2>
+      <!-- 여기 안에 주차/요일 박스가 JS에 의해 동적으로 생성됨 -->
     </div>
   </div>
 
