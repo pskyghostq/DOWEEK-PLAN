@@ -2,7 +2,6 @@ const addBtn = document.getElementById('addBtn');
 const input = document.getElementById('todoInput');
 const dateInput = document.getElementById('dateInput');
 
-//랜덤 메시지 입력
 const praiseMessages = [
   '오늘도 열심히 살았다',
   '수고했어',
@@ -13,17 +12,68 @@ const praiseMessages = [
   '행복해져라 (+^+)'
 ];
 
-// LocalStorage에서 불러오기
-function loadTodos() {
-  const storedTodos = JSON.parse(localStorage.getItem('todos')) || [];
-  storedTodos.forEach(({ text, dayName, completed, dateString }) => {
-    addTodoToDay(text, dayName, completed, dateString);
-  });
+const days = ['일', '월', '화', '수', '목', '금', '토'];
+
+// 주차 블록을 삽입할 container 지정
+const weekSheet = document.getElementById('week-container');
+
+function createWeekBlock(weekNumber, dayName) {
+  // 먼저 해당 주차의 블록이 있는지 확인
+  let weekBlock = document.querySelector(`.week-block[data-week="${weekNumber}"]`);
+
+  // 주차 블록이 없다면 새로 생성
+  if (!weekBlock) {
+    weekBlock = document.createElement('div');
+    weekBlock.classList.add('week-block');
+    weekBlock.setAttribute('data-week', weekNumber);
+
+    const weekTitle = document.createElement('h3');
+    weekTitle.textContent = `${weekNumber}주차`;
+    weekBlock.appendChild(weekTitle);
+
+    // 주차 블록의 올바른 위치 찾기 (오름차순 정렬)
+    let inserted = false;
+    const blocks = document.querySelectorAll('.week-block');
+    blocks.forEach(block => {
+      const currentWeek = parseInt(block.getAttribute('data-week'));
+      if (!inserted && currentWeek > weekNumber) {
+        weekSheet.insertBefore(weekBlock, block);
+        inserted = true;
+      }
+    });
+    if (!inserted) {
+      weekSheet.appendChild(weekBlock);
+    }
+  }
+
+  // 주차 블록 내에 해당 요일 박스가 없으면 생성
+  let dayDiv = weekBlock.querySelector(`.day[data-day="${dayName}"]`);
+  if (!dayDiv) {
+    dayDiv = document.createElement('div');
+    dayDiv.classList.add('day');
+    dayDiv.setAttribute('data-day', dayName);
+
+    const dayTitle = document.createElement('h4');
+    dayTitle.textContent = `${dayName}요일`;
+    dayDiv.appendChild(dayTitle);
+
+    const ul = document.createElement('ul');
+    ul.classList.add('todo-list');
+    dayDiv.appendChild(ul);
+
+    const praiseBox = document.createElement('div');
+    praiseBox.classList.add('praiseBox');
+    dayDiv.appendChild(praiseBox);
+
+    weekBlock.appendChild(dayDiv);
+  }
+
+  return weekBlock;
 }
 
-// 할 일을 특정 요일에 추가
-function addTodoToDay(text, dayName, completed = false, dateString = '') {
-  const dayColumn = document.querySelector(`.day[data-day="${dayName}"] .todo-list`);
+function addTodoToWeekDay(text, weekNumber, dayName, completed = false, dateString = '') {
+  const weekBlock = createWeekBlock(weekNumber, dayName);
+  const dayColumn = weekBlock.querySelector(`.day[data-day="${dayName}"] .todo-list`);
   if (!dayColumn) return;
 
   const li = document.createElement('li');
@@ -46,13 +96,14 @@ function addTodoToDay(text, dayName, completed = false, dateString = '') {
   delBtn.addEventListener('click', () => {
     li.remove();
     updateLocalStorage();
-    checkAllCompletedForDay(dayName);
+    checkAllCompletedForDay(weekNumber, dayName);
+    cleanupEmptyWeekBlock(weekNumber);
   });
 
   checkbox.addEventListener('change', () => {
     textSpan.classList.toggle('completed', checkbox.checked);
     updateLocalStorage();
-    checkAllCompletedForDay(dayName);
+    checkAllCompletedForDay(weekNumber, dayName);
   });
 
   li.appendChild(checkbox);
@@ -62,9 +113,11 @@ function addTodoToDay(text, dayName, completed = false, dateString = '') {
   dayColumn.appendChild(li);
 }
 
-// 모든 할 일 완료 체크 → 칭찬 메시지 표시
-function checkAllCompletedForDay(dayName) {
-  const daySection = document.querySelector(`.day[data-day="${dayName}"]`);
+function checkAllCompletedForDay(weekNumber, dayName) {
+  const weekBlock = document.querySelector(`.week-block[data-week="${weekNumber}"]`);
+  if (!weekBlock) return;
+
+  const daySection = weekBlock.querySelector(`.day[data-day="${dayName}"]`);
   if (!daySection) return;
 
   const praiseBox = daySection.querySelector('.praiseBox');
@@ -78,26 +131,60 @@ function checkAllCompletedForDay(dayName) {
   }
 }
 
-// LocalStorage 저장
+function cleanupEmptyWeekBlock(weekNumber) {
+  const weekBlock = document.querySelector(`.week-block[data-week="${weekNumber}"]`);
+  if (!weekBlock) return;
+
+  const hasTodos = weekBlock.querySelectorAll('li').length > 0;
+  if (!hasTodos) {
+    weekBlock.remove();
+  }
+}
+
 function updateLocalStorage() {
   const allTodos = [];
-  document.querySelectorAll('.day[data-day]').forEach(daySection => {
-    const dayName = daySection.getAttribute('data-day');
-    daySection.querySelectorAll('li').forEach(li => {
-      const textSpan = li.querySelector('span:not(.todo-date)');
-      const dateSpan = li.querySelector('.todo-date');
-      const text = textSpan ? textSpan.textContent : '';
-      const dateString = dateSpan ? dateSpan.textContent.replace(/[()]/g, '').trim() : '';
-      const completed = li.querySelector('input[type="checkbox"]').checked;
+  document.querySelectorAll('.week-block').forEach(weekBlock => {
+    const weekNumber = parseInt(weekBlock.getAttribute('data-week'));
+    weekBlock.querySelectorAll('.day').forEach(daySection => {
+      const dayName = daySection.getAttribute('data-day');
+      daySection.querySelectorAll('li').forEach(li => {
+        const textSpan = li.querySelector('span:not(.todo-date)');
+        const dateSpan = li.querySelector('.todo-date');
+        const text = textSpan ? textSpan.textContent : '';
+        const dateString = dateSpan ? dateSpan.textContent.replace(/[()]/g, '').trim() : '';
+        const completed = li.querySelector('input[type="checkbox"]').checked;
 
-      allTodos.push({ text, dayName, completed, dateString });
+        allTodos.push({ text, weekNumber, dayName, completed, dateString });
+      });
     });
   });
 
   localStorage.setItem('todos', JSON.stringify(allTodos));
 }
 
-// 버튼 클릭 시 할 일 추가
+function loadTodos() {
+  const storedTodos = JSON.parse(localStorage.getItem('todos')) || [];
+  storedTodos.forEach(({ text, weekNumber, dayName, completed, dateString }) => {
+    addTodoToWeekDay(text, weekNumber, dayName, completed, dateString);
+  });
+}
+
+function getWeekNumber(date) {
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const firstDayWeekday = firstDay.getDay();
+
+  const currentDate = date.getDate();
+  const daysInFirstWeek = 8 - firstDayWeekday;
+
+  if (currentDate <= daysInFirstWeek) {
+    return 1;
+  } else {
+    return 1 + Math.ceil((currentDate - daysInFirstWeek) / 7);
+  }
+}
+
 addBtn.addEventListener('click', () => {
   const text = input.value.trim();
   const selectedDate = new Date(dateInput.value);
@@ -105,24 +192,24 @@ addBtn.addEventListener('click', () => {
   if (!text) {
     alert('할 일을 입력해주세요.');
     return;
-  } else if (isNaN(selectedDate.getTime())) {
+  }
+  if (isNaN(selectedDate.getTime())) {
     alert('날짜를 입력해주세요.');
     return;
   }
 
-  const days = ['일', '월', '화', '수', '목', '금', '토'];
   const dayName = days[selectedDate.getDay()];
   const dateString = selectedDate.toLocaleDateString();
+  const weekNumber = getWeekNumber(selectedDate);
 
-  addTodoToDay(text, dayName, false, dateString);
+  addTodoToWeekDay(text, weekNumber, dayName, false, dateString);
   updateLocalStorage();
   input.value = '';
   dateInput.value = '';
-  checkAllCompletedForDay(dayName);
+  checkAllCompletedForDay(weekNumber, dayName);
 });
 
-// 엔터 키로도 할 일 추가 가능
-input.addEventListener('keydown', (e) => {
+input.addEventListener('keydown', e => {
   if (e.key === 'Enter') addBtn.click();
 });
 
