@@ -55,11 +55,12 @@ body {
 /* 요일별 계획 컨테이너 */
 .week {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap; /* 줄 바꿈 없음 */
     justify-content: center;
     gap: 24px;
     max-width: 1000px;
     margin-bottom: 40px;
+    overflow-x: auto; /* 가로 스크롤롤 */
 }
 
 /* 각 요일 박스 스타일 */
@@ -67,7 +68,7 @@ body {
     background: #ffffff;
     padding: 18px;
     border-radius: 12px;
-    width: 140px;
+    width: 110px;
     text-align: center;
     box-shadow: 0 4px 10px rgba(0,0,0,0.08);
     transition: transform 0.2s ease;
