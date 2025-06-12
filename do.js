@@ -12,16 +12,35 @@ const praiseMessages = [
   '행복해져라 (+^+)'
 ];
 
+// 요일 배열: 기본 순서는 [일, 월, 화, 수, 목, 금, 토]
+// 화면 표시 순서는 월, 화, 수, 목, 금, 토, 일
 const days = ['일', '월', '화', '수', '목', '금', '토'];
 
 // 주차 블록을 삽입할 container 지정
 const weekSheet = document.getElementById('week-container');
 
-function createWeekBlock(weekNumber, dayName) {
-  // 먼저 해당 주차의 블록이 있는지 확인
-  let weekBlock = document.querySelector(`.week-block[data-week="${weekNumber}"]`);
+/*  
+  sortDayBoxes() 함수는 주어진 주차 블록 내의 .day 박스들을
+  미리 정해둔 요일 순서(월, 화, 수, 목, 금, 토, 일)로 정렬하여 배치합니다.
+*/
+function sortDayBoxes(weekBlock) {
+  const weekDaysOrder = ['월', '화', '수', '목', '금', '토', '일'];
+  const dayBoxes = Array.from(weekBlock.querySelectorAll('.day'));
+  dayBoxes.sort((a, b) => {
+    const dayA = a.getAttribute('data-day');
+    const dayB = b.getAttribute('data-day');
+    return weekDaysOrder.indexOf(dayA) - weekDaysOrder.indexOf(dayB);
+  });
+  dayBoxes.forEach(dayBox => weekBlock.appendChild(dayBox)); // 이동하면 순서 재배치됨
+}
 
-  // 주차 블록이 없다면 새로 생성
+/*
+  createWeekBlock(weekNumber) 함수는 지정한 주차의 블록이 없으면 생성합니다.
+  여기서는 요일 박스를 미리 생성하지 않습니다.
+  주차 블록은 1주차부터 오름차순으로 정렬되어 DOM에 삽입됩니다.
+*/
+function createWeekBlock(weekNumber) {
+  let weekBlock = document.querySelector(`.week-block[data-week="${weekNumber}"]`);
   if (!weekBlock) {
     weekBlock = document.createElement('div');
     weekBlock.classList.add('week-block');
@@ -45,8 +64,34 @@ function createWeekBlock(weekNumber, dayName) {
       weekSheet.appendChild(weekBlock);
     }
   }
+  return weekBlock;
+}
 
-  // 주차 블록 내에 해당 요일 박스가 없으면 생성
+/*
+  cleanupEmptyDayBox() 함수는 해당 주차의 요일 박스 내에 할 일이 없으면 요일 박스를 삭제합니다.
+*/
+function cleanupEmptyDayBox(weekNumber, dayName) {
+  const weekBlock = document.querySelector(`.week-block[data-week="${weekNumber}"]`);
+  if (!weekBlock) return;
+  
+  const dayBox = weekBlock.querySelector(`.day[data-day="${dayName}"]`);
+  if (!dayBox) return;
+  
+  const ul = dayBox.querySelector('.todo-list');
+  if (!ul || ul.children.length === 0) {
+    dayBox.remove();
+  }
+}
+
+/*
+  addTodoToWeekDay() 함수는 할 일을 추가할 때,
+  해당 주차 블록 내에 할 일이 속한 요일 박스가 없으면 생성한 후 할 일을 추가합니다.
+  추가 후, 해당 주차 블록 내의 요일 박스들을 월~일 순으로 정렬합니다.
+*/
+function addTodoToWeekDay(text, weekNumber, dayName, completed = false, dateString = '') {
+  const weekBlock = createWeekBlock(weekNumber);
+  
+  // 해당 주차 블록 내에 해당 요일 박스가 없으면 생성
   let dayDiv = weekBlock.querySelector(`.day[data-day="${dayName}"]`);
   if (!dayDiv) {
     dayDiv = document.createElement('div');
@@ -67,13 +112,11 @@ function createWeekBlock(weekNumber, dayName) {
 
     weekBlock.appendChild(dayDiv);
   }
+  
+  // 정렬 과정: 요일 박스들이 올바른 순서(월,화,수,목,금,토,일)로 배치되도록 함
+  sortDayBoxes(weekBlock);
 
-  return weekBlock;
-}
-
-function addTodoToWeekDay(text, weekNumber, dayName, completed = false, dateString = '') {
-  const weekBlock = createWeekBlock(weekNumber, dayName);
-  const dayColumn = weekBlock.querySelector(`.day[data-day="${dayName}"] .todo-list`);
+  const dayColumn = dayDiv.querySelector('.todo-list');
   if (!dayColumn) return;
 
   const li = document.createElement('li');
@@ -97,6 +140,7 @@ function addTodoToWeekDay(text, weekNumber, dayName, completed = false, dateStri
     li.remove();
     updateLocalStorage();
     checkAllCompletedForDay(weekNumber, dayName);
+    cleanupEmptyDayBox(weekNumber, dayName);  // 해당 요일의 할 일이 없으면 요일 박스 삭제
     cleanupEmptyWeekBlock(weekNumber);
   });
 
@@ -176,7 +220,7 @@ function getWeekNumber(date) {
   const firstDayWeekday = firstDay.getDay();
 
   const currentDate = date.getDate();
-  const daysInFirstWeek = 8 - firstDayWeekday;
+  const daysInFirstWeek = 8 - firstDayWeekday; // 첫 주 남은 날짜
 
   if (currentDate <= daysInFirstWeek) {
     return 1;
@@ -194,7 +238,7 @@ addBtn.addEventListener('click', () => {
     return;
   }
   if (isNaN(selectedDate.getTime())) {
-    alert('날짜를 입력해주세요.');
+    alert('날짜를 선택해주세요.');
     return;
   }
 
